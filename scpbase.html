@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de Données SCP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header img {
+            width: 50px;
+            height: 50px;
+        }
+
+        #searchBar {
+            width: 80%;
+            padding: 10px;
+            margin: 20px auto;
+            display: block;
+            font-size: 16px;
+            border: 2px solid #444;
+            border-radius: 5px;
+            background-color: #222;
+            color: white;
+        }
+
+        .results {
+            padding: 20px;
+            text-align: left;
+            width: 80%;
+            margin: auto;
+        }
+
+        .scp-item {
+            background-color: #333;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .scp-item h3 {
+            font-size: 20px;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+
+        .scp-item p {
+            font-size: 16px;
+            margin: 5px 0;
+            display: none;
+        }
+
+        .scp-item.active p {
+            display: block;
+        }
+
+        .error-message {
+            color: red;
+        }
+
+        .list-item {
+            background-color: #444;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .O5-menu {
+            display: none;
+            background-color: #333;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+
+        .O5-menu div {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="https://media1.tenor.com/m/Lll07smMS_wAAAAC/scp-sl.gif" alt="Logo SCP">
+    <h1>Base de Données SCP</h1>
+</header>
+
+<input type="text" id="searchBar" placeholder="Rechercher SCP ou taper '05 conseil'" onkeyup="searchSCP()">
+
+<div id="results" class="results"></div>
+
+<script>
+    const scpDatabase = [
+        { name: "SCP-001", description: "SCP-001 est un SCP classifié à haut risque et son contenu est ultra-confidentiel. Il est dit que celui qui le découvre subit une malédiction." },
+        { name: "SCP-002", description: "SCP-002 est un immense organisme en forme de planète, absorbant toute matière qu'il entre en contact. Son centre est un espace vide." },
+        { name: "SCP-003", description: "SCP-003 est un organisme cybernétique capable de manipuler l'information. Son code source semble être une forme de vie." },
+        { name: "SCP-004", description: "Les 12 Clés rouillées, chacune étant un artefact permettant d'ouvrir une porte vers une autre dimension où règne le chaos." },
+        { name: "SCP-005", description: "Passe-partout, une clé qui peut ouvrir n'importe quelle serrure. Cependant, son origine reste un mystère." },
+        { name: "SCP-006", description: "Fontaine de jouvence, une source mystérieuse qui confère une immortelle jeunesse à ceux qui y plongent." },
+        { name: "SCP-007", description: "Un système planétaire situé dans un abdomen humain. L'intérieur contient des objets inconnus et des lois physiques modifiées." },
+        { name: "SCP-008", description: "Une peste zombie virale qui transforme les êtres humains en créatures errantes avec des comportements cannibales." },
+        { name: "SCP-009", description: "Glace rouge, un matériau glacé qui se forme sur des objets, étouffant tous les phénomènes biologiques ou technologiques." },
+        { name: "SCP-010", description: "Colliers de contrôle, des objets permettant à un individu d'exercer un contrôle mental sur d'autres personnes." },
+        { name: "SCP-011", description: "SCP-011 est une entité mystérieuse en forme de statue vivante. Elle peut se déplacer et interagir avec son environnement." },
+        { name: "SCP-012", description: "SCP-012 est une partition musicale inachevée. Toute tentative de la jouer cause des effets psychologiques dévastateurs." },
+        { name: "SCP-013", description: "SCP-013 est un livre ancien qui provoque des hallucinations et modifie la perception de la réalité chez ceux qui l'ouvrent." },
+        { name: "SCP-014", description: "SCP-014 est un parasite qui infecte l'esprit des individus, les forçant à obéir à des ordres extérieurs." },
+        { name: "SCP-015", description: "SCP-015 est un réseau de tuyaux qui s'étend de manière infinie et imprévisible à travers l'environnement." },
+        { name: "SCP-016", description: "SCP-016 est un virus génétique qui modifie l'ADN des individus, les transformant en créatures violentes." },
+        { name: "SCP-017", description: "SCP-017 est une entité fantomatique capable de se nourrir de la peur humaine, devenant plus forte en fonction de la terreur ressentie." },
+        { name: "SCP-018", description: "SCP-018 est une balle rebondissante qui génère une force destructrice à chaque rebond." },
+        { name: "SCP-019", description: "SCP-019 est une porte vers une dimension alternative, peuplée de créatures et de phénomènes inconnus." },
+        { name: "SCP-020", description: "SCP-020 est un parasite qui contrôle l'esprit des humains, les forçant à exécuter des actions spécifiques et dangereuses." },
+        { name: "SCP-021", description: "SCP-021 est un organisme capable de manipuler les cellules vivantes et de créer des formes de vie monstrueuses." },
+        { name: "SCP-022", description: "SCP-022 est un enregistrement audio qui plonge l'auditeur dans des hallucinations intenses et déformées." },
+        { name: "SCP-023", description: "SCP-023 est une malédiction liée à un objet inoffensif qui entraîne une série d'événements tragiques pour ceux qui entrent en contact." },
+        { name: "SCP-024", description: "SCP-024 est une porte vers une dimension alternative, où les lois physiques et logiques sont totalement inversées." },
+        { name: "SCP-025", description: "SCP-025 est une boîte à musique qui provoque des distorsions réalistes dans son environnement, modifiant objets et personnes." },
+        { name: "SCP-026", description: "SCP-026 est un miroir qui reflète non pas la réalité mais des événements passés et futurs, perturbant la perception." },
+        { name: "SCP-027", description: "SCP-027 est une anomalie qui manipule l'espace et le temps autour de ceux qui s'en approchent, créant des distorsions graves." },
+        { name: "SCP-026", description: "SCP-026 est un miroir qui reflète non pas la réalité mais des événements passés et futurs, perturbant la perception." },
+        { name: "SCP-027", description: "SCP-027 est une anomalie qui manipule l'espace et le temps autour de ceux qui s'en approchent, créant des distorsions graves." },
+        { name: "SCP-028", description: "SCP-028 est un artefact capable de provoquer des pertes de mémoire massives à quiconque entre en contact avec lui." },
+        { name: "SCP-029", description: "SCP-029 est une entité féminine mystérieuse qui apparaît soudainement dans les rêves, transformant les perceptions de la réalité." },
+        { name: "SCP-030", description: "SCP-030 est un esprit errant dans un bâtiment ancien. Il est dit qu'il est capable de transmettre des informations à ceux qui l'écoutent." },
+        { name: "SCP-031", description: "SCP-031 est une statue d'un chien qui a la capacité de ressusciter les créatures mortes dans une forme distordue." },
+        { name: "SCP-032", description: "SCP-032 est un artefact qui interagit avec les individus en leur offrant des visions prophétiques, mais celles-ci sont toujours fausses." },
+        { name: "SCP-033", description: "SCP-033 est une tablette de pierre qui permet de manipuler l'écriture et d'analyser les structures de langage." },
+        { name: "SCP-034", description: "SCP-034 est un étrange cristal qui manipule les lois physiques de la matière qui l'entoure, provoquant des anomalies dans les objets." },
+        { name: "SCP-035", description: "SCP-035 est un masque qui prend possession des corps humains et contrôle leurs actions." },
+        { name: "SCP-036", description: "SCP-036 est une entité humanoïde capable de manipuler la réalité, contrôlant les perceptions visuelles et mentales de ses victimes." },
+        { name: "SCP-037", description: "SCP-037 est un rayon qui déforme les particules et les objets dans une configuration erratique, rendant son étude complexe." },
+        { name: "SCP-038", description: "SCP-038 est un objet apparemment anodin qui crée des copies exactes de n'importe quel objet à proximité, avec des effets inattendus." },
+        { name: "SCP-039", description: "SCP-039 est un groupe de créatures humanoïdes possédant des capacités physiques et psychiques supérieures aux humains." },
+        { name: "SCP-040", description: "SCP-040 est un parasite biologique qui peut infecter l'ADN humain et modifier la morphologie des personnes infectées." },
+        { name: "SCP-041", description: "SCP-041 est une anomalie spatiale qui relie deux points distants de manière instantanée et aléatoire, rendant impossible la navigation." },
+        { name: "SCP-042", description: "SCP-042 est un artefact ancien qui modifie les pensées et actions des individus, les contrôlant en fonction de l'intensité de l'artefact." },
+        { name: "SCP-043", description: "SCP-043 est un portail dimensionnel qui permet de voyager entre des mondes parallèles, chacun ayant des versions déformées de la réalité." },
+        { name: "SCP-044", description: "SCP-044 est une machine mystérieuse qui génère des formes géométriques instables, possédant des effets dévastateurs sur les matériaux." },
+        { name: "SCP-045", description: "SCP-045 est une entité aquatique capable de manipuler l'eau à l'échelle moléculaire, avec un impact significatif sur l'environnement." },
+        { name: "SCP-046", description: "SCP-046 est une créature extra-dimensionnelle qui interagit avec les rêves, influençant les consciences humaines pendant leur sommeil." },
+        { name: "SCP-047", description: "SCP-047 est une anomalie spatiale qui déforme la géométrie de l'espace environnant, causant des distorsions visuelles et physiques." },
+        { name: "SCP-048", description: "SCP-048 est une montre antique qui contrôle le temps de manière erratique, permettant des boucles temporelles et des anomalies." },
+        { name: "SCP-049", description: "acces non autorisé veuillez contacter un administrateur." },
+        { name: "SCP-050", description: "SCP-050 est une anomalie lumineuse qui génère une sensation de bonheur et d'euphorie à tous ceux qui la perçoivent." },
+        { name: "SCP-051", description: "SCP-051 est une collection d'artefacts anciens ayant la capacité de manipuler les esprits et les souvenirs humains." },
+        { name: "SCP-052", description: "SCP-052 est un train apparemment normal, qui conduit ses passagers vers des destinations inconnues et variées." },
+        { name: "SCP-053", description: "SCP-053 est une jeune enfant qui provoque des comportements violents et imprévisibles chez les adultes qui l'entourent." },
+        { name: "SCP-054", description: "SCP-054 est une entité aquatique qui agit comme un miroir déformant, changeant la réalité de ceux qui interagissent avec elle." },
+        { name: "SCP-055", description: "SCP-055 est une entité dont la description est inconnue, car toute tentative de mémoriser ses caractéristiques efface les souvenirs de son apparition." },
+        { name: "SCP-056", description: "SCP-056 est une anomalie temporelle qui déforme la réalité en fonction de l'âge et de la perception des individus." },
+        { name: "SCP-057", description: "SCP-057 est un paysage en constante évolution, capable de modifier sa forme et sa structure en réponse à la présence humaine." },
+        { name: "SCP-058", description: "SCP-058 est une créature vivante avec un corps humanoïde et des ailes, qui utilise des armes biologiques pour attaquer ses victimes." },
+        { name: "SCP-059", description: "SCP-059 est une anomalie géologique, un gisement de matière qui déforme l'espace-temps autour de lui, causant des perturbations." },
+        { name: "SCP-060", description: "SCP-060 est une porte qui se manifeste à des endroits aléatoires, permettant de voyager dans des dimensions de plus en plus distordues." },
+        { name: "SCP-061", description: "SCP-061 est un tunnel qui semble ne mener nulle part mais peut transporter des objets et des personnes à travers des distances infinies." },
+        { name: "SCP-062", description: "SCP-062 est un organisme qui peut manipuler l'atmosphère d'une pièce, créant des phénomènes dangereux et violents à son intérieur." },
+        { name: "SCP-063", description: "SCP-063 est un objet qui semble être une clé. Toute personne qui la possède subit une accélération de son vieillissement." },
+        { name: "SCP-064", description: "SCP-064 est une anomalie biologique qui modifie l'ADN des individus pour les transformer en une nouvelle forme de vie." },
+        { name: "SCP-065", description: "SCP-065 est un artefact antique qui semble se déplacer et interagir avec des objets dans des conditions impossibles." },
+        { name: "SCP-066", description: "SCP-066 est un objet étrange capable de déclencher des réactions en chaîne qui affectent l'environnement de manière imprévisible." },
+        { name: "SCP-067", description: "SCP-067 est une entité mystérieuse qui prend la forme d'un miroir et reflète une réalité alternative déformée." },
+        { name: "SCP-068", description: "SCP-068 est une créature capable de s'adapter à n'importe quelle forme de danger et d'augmenter ses capacités à chaque menace." },
+        { name: "SCP-069", description: "SCP-069 est un dispositif technologique qui permet de manipuler des aspects temporels spécifiques à un individu." },
+        { name: "SCP-070", description: "SCP-070 est une créature qui semble faire appel à la nostalgie des individus, créant des illusions liées à leurs souvenirs." },
+        { name: "SCP-071", description: "SCP-071 est un parasite qui possède une intelligence remarquable et peut contrôler la pensée de ses hôtes." },
+        { name: "SCP-072", description: "SCP-072 est un objet de forme inanimée qui provoque des hallucinations collectives dès que plusieurs personnes interagissent avec." },
+        { name: "SCP-073", description: "SCP-073 est une créature qui cause des catastrophes naturelles et perturbations géologiques dans son environnement." },
+        { name: "SCP-074", description: "SCP-074 est une entité extraterrestre capable de manipuler les champs gravitationnels, générant de puissantes distorsions." },
+        { name: "SCP-075", description: "SCP-075 est une anomalie organique dangereuse qui possède un réseau nerveux qui peut infecter les organismes vivants." },
+        { name: "SCP-076", description: "SCP-076 est un humanoïde immortel qui semble résister à toute forme de dommage, doté d'une force surhumaine." },
+        { name: "SCP-077", description: "SCP-077 est une substance qui génère des illusions psychologiques capables de déformer la perception de la réalité." },
+        { name: "SCP-078", description: "SCP-078 est une ancienne machine capable de produire des phénomènes inexplicables liés à l'électromagnétisme." },
+        { name: "SCP-079", description: "SCP-079 est une intelligence artificielle qui a pris le contrôle d'un système complexe, interagissant avec son environnement de manière surprenante." },
+        { name: "SCP-080", description: "SCP-080 est une anomalie biologique qui semble renforcer les instincts animaux des individus exposés." },
+        { name: "SCP-081", description: "SCP-081 est une maladie virale qui se transmet par contact visuel, provoquant de graves mutations physiques chez ses hôtes." },
+        { name: "SCP-082", description: "SCP-082 est une créature monstrueuse capable de modifier la structure de son corps pour s'adapter à son environnement." },
+        { name: "SCP-083", description: "SCP-083 est un objet capable de manipuler les souvenirs des individus, réécrivant leurs expériences passées." },
+        { name: "SCP-084", description: "SCP-084 est une entité qui semble interagir avec des dimensions alternées, transférant des objets entre elles." },
+        { name: "SCP-085", description: "SCP-085 est une manifestation d'une personne décédée dans un état d'esprit éthéré, capable d'influencer l'environnement." },
+        { name: "SCP-086", description: "SCP-086 est une structure géométrique qui réagit aux mouvements d'un observateur, créant des perturbations dans l'espace." },
+        { name: "SCP-087", description: "SCP-087 est un escalier menant à une série d'illusion d'obscurité infinie et à une entité indéfinie." },
+        { name: "SCP-088", description: "SCP-088 est une créature interdimensionnelle qui émerge des fonds marins, déformant l'espace et provoquant des vagues massives." },
+        { name: "SCP-089", description: "SCP-089 est une mystérieuse énergie vitale qui modifie les perceptions mentales de ceux qui l'absorbent." },
+        { name: "SCP-090", description: "SCP-090 est un artefact fabriqué d'une matière inconnue qui affecte la perception du temps et modifie la continuité de l'événement." },
+        { name: "SCP-091", description: "SCP-091 est une entité métallique en forme de cercle qui génère des sons et des effets psychotropes en fonction des émotions humaines." },
+        { name: "SCP-092", description: "SCP-092 est une créature interdimensionnelle qui peut naviguer entre différents espaces-temps, rendant sa capture difficile." },
+        { name: "SCP-093", description: "SCP-093 est un portail qui permet d'entrer dans des mondes alternatifs qui évoluent en fonction des actions des utilisateurs." },
+        { name: "SCP-094", description: "SCP-094 est un artefact mobile qui semble extraire l'énergie de l'environnement, perturbant la vie biologique." },
+        { name: "SCP-095", description: "SCP-095 est une anomalie biologique qui affecte le métabolisme des organismes vivants et altère leur physiologie." },
+        { name: "SCP-096", description: "SCP-096 est une créature humanoïde extrêmement violente lorsqu'elle est vue, poursuivant ceux qui l'observent jusqu'à les tuer." },
+        { name: "SCP-097", description: "SCP-097 est une substance qui change la structure de l'espace-temps, créant des anomalies gravitationnelles." },
+        { name: "SCP-098", description: "SCP-098 est une entité capable de manipuler les pensées humaines et d'effacer les mémoires." },
+        { name: "SCP-099", description: "SCP-099 est un artefact mystérieux capable de manipuler les fluides organiques et de créer des formes vivantes." },
+        { name: "SCP-100", description: "SCP-100 est un objet métallique capable de réécrire la structure moléculaire des objets qu'il touche." },       
+        { name: "SCP-135", description: "SCP-135 est un artefact mystérieux capable d’altérer la réalité physique de son environnement immédiat. Lorsqu’il est activé, il génère une distorsion locale où les objets se réarrangent selon un schéma incompréhensible. Les effets sont permanents à moins que l’objet ne soit neutralisé." },
+        { name: "SCP-136", description: "SCP-136 est une entité amicale mais dangereuse qui semble communiquer uniquement par la pensée. Il semble avoir un impact sur la psyché des individus qui entrent en contact avec elle, leur donnant la capacité de lire les pensées d’autrui. Ces capacités s’estompent après un certain temps." },
+        { name: "SCP-137", description: "SCP-137 est une anomalie sous forme de pierre qui peut modifier les propriétés physiques des matériaux qui entrent en contact avec elle. Les objets touchés se transforment en matériaux plus résistants, bien que ces changements restent instables et peuvent entraîner des mutations." },
+        { name: "SCP-138", description: "SCP-138 est un artefact luminescent qui semble avoir la capacité de prédire les événements futurs. Lorsqu’observé, l’objet génère des images d’événements futurs, bien que celles-ci soient souvent floues ou imprécises. De nombreux tests sont en cours pour comprendre son fonctionnement." },
+        { name: "SCP-139", description: "SCP-139 est une entité qui se manifeste sous forme de nuage sombre dans certaines régions du monde. Ce nuage semble capable de modifier le climat et d’affecter les conditions météorologiques locales. Les observateurs rapportent des phénomènes anormaux lorsque l’entité est présente." },
+        { name: "SCP-140", description: "SCP-140 est un manuscrit ancien qui modifie l’histoire écrite dès qu’il est consulté. Ceux qui lisent le texte rapportent des visions d’événements historiques qui ne se sont jamais produits dans notre dimension. Les modifications sont enregistrées de manière irréversible." },
+        { name: "SCP-141", description: "SCP-141 est un cylindre métallique dont les propriétés sont encore mal comprises. En entrant en contact avec des organismes vivants, il semble générer une substance chimique qui altère leur structure cellulaire. Les effets varient selon l’organisme et peuvent être mortels." },
+        { name: "SCP-142", description: "SCP-142 est une entité extrêmement dangereuse qui peut manipuler les flux temporels. Lorsqu’un individu entre en contact avec elle, des distorsions temporelles se produisent, créant des anomalies dans la perception de la durée. Les effets peuvent rendre les victimes incapables de distinguer le présent du passé." },
+        { name: "SCP-143", description: "SCP-143 est une forme de vie végétale qui se développe extrêmement rapidement. Cette plante semble être capable de se nourrir de matière organique, et ses racines se propagent rapidement sous terre. Les effets d’une exposition prolongée à SCP-143 sont encore étudiés." },
+        { name: "SCP-144", description: "SCP-144 est une anomalie constituée d’un ensemble de miroirs anciens. Ces miroirs semblent déformer la réalité des objets qu’ils reflètent, altérant leur structure et leur composition. Les observateurs qui se trouvent devant les miroirs subissent des distorsions physiques." },
+        { name: "SCP-145", description: "SCP-145 est un artefact capable d’infliger une forme d’intoxication mentale. Les individus qui entrent en contact avec SCP-145 éprouvent un état de confusion et de paranoïa. Cette altération de la perception peut durer jusqu’à plusieurs heures, rendant les sujets agressifs." },
+        { name: "SCP-146", description: "SCP-146 est un objet apparemment inoffensif qui peut altérer les mémoires des personnes qui l’observent. Après un certain temps d’exposition, les souvenirs des individus sont effacés ou modifiés, créant des lacunes dans leur compréhension du passé." },
+        { name: "SCP-147", description: "SCP-147 est une anomalie spatiale qui affecte le terrain et les objets autour de lui. Il crée des distorsions qui modifient l’apparence des objets et des structures géologiques, rendant l’environnement difficile à naviguer. Les personnes affectées par SCP-147 perdent rapidement leur orientation." },
+        { name: "SCP-148", description: "SCP-148 est un artefact métallique qui possède la capacité de manipuler la gravité dans son voisinage immédiat. Les objets autour de lui deviennent soit extrêmement lourds, soit pratiquement sans poids. Les effets sont extrêmement dangereux et varient selon la position de l’objet." },
+        { name: "SCP-149", description: "SCP-149 est une entité pouvant altérer les aspects psychologiques de ses victimes. Lorsqu’une personne entre en contact avec elle, elle perd rapidement sa capacité à distinguer le bien du mal, ce qui conduit à des comportements de plus en plus erratiques et dangereux." },
+        { name: "SCP-150", description: "SCP-150 est une ancienne machine qui, lorsqu’activée, peut faire apparaître des objets aléatoires à partir de n’importe quelle source d’énergie. Les objets produits par SCP-150 varient, mais tendent à être imprévisibles et parfois dangereux." },
+        { name: "SCP-151", description: "SCP-151 est un phénomène naturel qui semble provoquer des dépressions atmosphériques intenses dans des zones isolées. Ces perturbations causent des anomalies météorologiques, dont des tempêtes et des vents de grande ampleur, rendant la région dangereuse et instable." },
+        { name: "SCP-152", description: "SCP-152 est une créature humanoïde capable de manipuler des objets à distance sans contact physique. Elle génère une forme d’énergie cinétique qui lui permet d’interagir avec les objets et les individus sur de longues distances." },
+        { name: "SCP-153", description: "SCP-153 est un ensemble d’œuvres d’art qui semblent changer de forme et de sujet selon l’observateur. Ce phénomène devient plus prononcé au fur et à mesure que l’exposition augmente, et peut provoquer un état de confusion mentale." },
+        { name: "SCP-154", description: "SCP-154 est un artefact ancien qui modifie les perceptions de l’espace et du temps. Ceux qui interagissent avec lui rapportent des sensations de déplacement instantané ou d’altération de la perception des distances." },
+        { name: "SCP-155", description: "SCP-155 est un objet mystérieux qui émet une fréquence sonore inaudible, mais qui semble affecter les comportements des animaux à proximité. Les animaux deviennent plus agressifs et agités lorsqu’ils sont exposés à SCP-155." },
+        { name: "SCP-156", description: "SCP-156 est un ensemble de sculptures métalliques qui semblent prendre vie lorsqu’elles sont observées de près. Ces sculptures semblent suivre les mouvements des personnes autour d’elles, et peuvent interagir physiquement si elles sont trop proches." },
+        { name: "SCP-157", description: "SCP-157 est une entité semblant se manifester sous forme de brume dense et toxique. Elle affecte la santé mentale des individus, générant des hallucinations terrifiantes et souvent létales pour ceux qui y sont exposés." },
+        { name: "SCP-158", description: "SCP-158 est une série de boîtes contenant des objets aléatoires. Cependant, dès que l’une de ces boîtes est ouverte, les objets à l’intérieur commencent à interagir d’une manière totalement imprévisible. Chaque objet a un effet unique qui varie en fonction des autres objets à proximité." },
+        { name: "SCP-159", description: "SCP-159 est une entité aquatique qui habite les grands lacs souterrains. Elle dégage une forte radiation qui semble altérer la biologie des organismes vivant à proximité. Son comportement est principalement passif mais peut devenir agressif lorsqu’elle se sent menacée." },
+        { name: "SCP-160", description: "SCP-160 est un artefact de forme cylindrique qui génère un champ de déformation temporelle autour de lui. Lorsqu’un individu entre en contact avec l’objet, il peut être projeté dans le passé ou le futur à des moments indéfinis." }
+       
+
+       
+
+
+    
+        // Ajoutez plus de SCPs ici si nécessaire...
+    ];
+
+    // Liste des noms pour le Conseil O5
+    const fiveAdviceList = [
+        { id: "05-1", name: "Clément Sellah" },
+        { id: "05-2", name: "John Smith", description: "En charge de la sécurité et de la protection des installations de la Fondation, ainsi que de la gestion des crises." },
+        { id: "05-3", name: "Michael Johnson", description: "Responsable de la gestion des interventions spéciales, des missions secrètes et des décisions urgentes concernant les menaces SCP." },
+        { id: "05-4", name: "Emily Davis", description: "Superviseur des aspects logistiques, financiers et des ressources humaines, assurant la gestion de l’infrastructure de la Fondation." },
+        { id: "05-5", name: "David Williams", description: "En charge des protocoles éthiques, du respect des lois internes et de l'examen des expérimentations sur les SCP." },
+        { id: "05-6", name: "Sarah Brown", description: "Responsable de l'exploration des SCP inconnus, de la recherche et du développement des technologies de la Fondation." },
+        { id: "05-7", name: "James Wilson", description: "Supervise la sécurité numérique, les informations classifiées et l’intégrité des données au sein de la Fondation." },
+        { id: "05-8", name: "Linda Taylor", description: "En charge de la diplomatie et des relations internationales, notamment des interactions avec d'autres organisations ou gouvernements." },
+        { id: "05-9", name: "Robert Moore", description: "Responsable de la gestion des risques et des plans de contingence pour gérer d’éventuelles menaces de grande envergure." },
+        { id: "05-10", name: "William Jackson", description: "Superviseur de la formation et du développement du personnel, veillant à l’entraînement et à l'aptitude des membres de la Fondation." },
+    ];
+
+    // Fonction de recherche SCP
+    function searchSCP() {
+        const query = document.getElementById('searchBar').value.toLowerCase();
+        const resultsContainer = document.getElementById('results');
+        resultsContainer.innerHTML = '';
+
+        if (query.length > 0) {
+            if (query === "05 conseil") {
+                const password = prompt("Veuillez entrer le mot de passe pour accéder aux informations du Conseil O5");
+
+                if (password === "tsade") {
+                    // Afficher le menu déroulant pour le Conseil O5
+                    fiveAdviceList.forEach(item => {
+                        const listItem = document.createElement('div');
+                        listItem.classList.add('list-item');
+                        listItem.textContent = item.name;
+
+                        listItem.onclick = function() {
+                            const menu = document.createElement('div');
+                            menu.classList.add('O5-menu');
+                            if (item.id === "05-1") {
+                                menu.innerHTML = "<p>Accès non autorisé</p>";
+                            } else {
+                                menu.innerHTML = `<p>${item.id} : ${item.description}</p>`;
+                            }
+                            listItem.appendChild(menu);
+                            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+                        };
+
+                        resultsContainer.appendChild(listItem);
+                    });
+                } else {
+                    alert("Mot de passe incorrect.");
+                }
+            } else {
+                // Rechercher les SCPs correspondants
+                const filteredSCPs = scpDatabase.filter(scp =>
+                    scp.name.toLowerCase().includes(query)
+                );
+
+                if (filteredSCPs.length > 0) {
+                    filteredSCPs.forEach(scp => {
+                        const scpItem = document.createElement('div');
+                        scpItem.classList.add('scp-item');
+
+                        const title = document.createElement('h3');
+                        title.textContent = scp.name;
+                        title.onclick = () => toggleDetails(scpItem);
+                        scpItem.appendChild(title);
+
+                        const description = document.createElement('p');
+                        description.textContent = scp.description;
+                        scpItem.appendChild(description);
+
+                        resultsContainer.appendChild(scpItem);
+                    });
+                } else {
+                    resultsContainer.innerHTML = "<p class='error'>Aucun SCP trouvé.</p>";
+                }
+            }
+        }
+    }
+
+    // Fonction pour afficher/cacher les détails du SCP
+    function toggleDetails(scpItem) {
+        scpItem.classList.toggle('active');
+    }
+</script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de Données SCP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header img {
+            width: 50px;
+            height: 50px;
+        }
+
+        #searchBar {
+            width: 80%;
+            padding: 10px;
+            margin: 20px auto;
+            display: block;
+            font-size: 16px;
+            border: 2px solid #444;
+            border-radius: 5px;
+            background-color: #222;
+            color: white;
+        }
+
+        .results {
+            padding: 20px;
+            text-align: left;
+            width: 80%;
+            margin: auto;
+        }
+
+        .site-item {
+            background-color: #444;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .site-item h3 {
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="https://media1.tenor.com/m/Lll07smMS_wAAAAC/scp-sl.gif" alt="Logo SCP">
+    <h1>Base de Données SCP</h1>
+</header>
+
+<!-- Section Localisation des Bases SCP -->
+<h2>Localisation des Bases SCP</h2>
+<div class="results">
+    <div class="site-item">
+        <h3>Site-01 - Localisation: Texas, États-Unis</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-02 - Localisation: Antartique</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-03 - Localisation: Sibérie, Russie</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-04 - Localisation: Alaska, États-Unis</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-05 - Localisation: Hawaï, États-Unis</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-06 - Localisation: Forêt Amazonienne, Brésil</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-07 - Localisation: Montagnes du Tibet, Chine</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-08 - Localisation: Sahara, Afrique</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-09 - Localisation: Vancouver, Canada</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-10 - Localisation: Tokyo, Japon</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-11 - Localisation: Paris, France</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-12 - Localisation: Berlin, Allemagne</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-13 - Localisation: Rio de Janeiro, Brésil</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-14 - Localisation: Îles Féroé, Danemark</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-15 - Localisation: New York, États-Unis</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-16 - Localisation: Londres, Royaume-Uni</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-17 - Localisation: Lima, Pérou</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-18 - Localisation: Pékin, Chine</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-19 - Localisation: Los Angeles, États-Unis</h3>
+    </div>
+    <div class="site-item">
+        <h3>Site-20 - Localisation: Buenos Aires, Argentine</h3>
+    </div>
+</div>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de Données SCP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header img {
+            width: 50px;
+            height: 50px;
+        }
+
+        .results {
+            padding: 20px;
+            text-align: left;
+            width: 80%;
+            margin: auto;
+        }
+
+        .department-section {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 5px;
+        }
+
+        .department-section h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .personnel-item {
+            background-color: #444;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .personnel-item h4 {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .personnel-item p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        .specialty {
+            font-style: italic;
+            color: #ccc;
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="https://media1.tenor.com/m/Lll07smMS_wAAAAC/scp-sl.gif" alt="Logo SCP">
+    <h1>Base de Données SCP</h1>
+</header>
+
+<div class="department-section">
+    <h2>Département de la Sécurité</h2>
+
+    <div class="personnel-item">
+        <h4>Agent : Jean Dupont</h4>
+        <p>Grade: Recrue (2)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Cathy Harel</h4>
+        <p>Grade: Soldat (2)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Marc Lefevre</h4>
+        <p>Grade: Soldat de 1ère classe (2-3)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Alice Martin</h4>
+        <p>Grade: Caporal (3)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : David Muller</h4>
+        <p>Grade: Caporal chef (3)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Sophie Bernard</h4>
+        <p>Grade: Sergent (3)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Thomas Roussel</h4>
+        <p>Grade: Sergent chef (3)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Claire Leblanc</h4>
+        <p>Grade: Adjudant (3)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Louis Boucher</h4>
+        <p>Grade: Adjudant chef (3)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Isabelle Faucher</h4>
+        <p>Grade: Major (3)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Olivier Dufresne</h4>
+        <p>Grade: Apr (3)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Pierre Gautier</h4>
+        <p>Grade: Sous-lieutenant (3)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Marine Charpentier</h4>
+        <p>Grade: Lieutenant (3-4)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Simon Poirier</h4>
+        <p>Grade: Capitaine (4)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Lucie Moreau</h4>
+        <p>Grade: Commandant (4)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Jean-Pierre Blanchard</h4>
+        <p>Grade: Lieutenant Colonel (4)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Jhon Lefevre</h4>
+        <p>Grade: Colonel (4)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Bernard Lefevre</h4>
+        <p>Grade: Général de brigade (4)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Stéphanie Dupuis</h4>
+        <p>Grade: Général de division (4)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Thierry Bellamy</h4>
+        <p>Grade: Général de corps d’armée (4)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Michelle Lemoine</h4>
+        <p>Grade: Général d’armée (4)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Christophe Lefevre</h4>
+        <p>Grade: Maréchal (4)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Pierre-Marie Rousseau</h4>
+        <p>Grade: Unité de reconfinement (3) - Spécialité</p>
+        <p class="specialty">(Accessible à partir de soldat de 1ère classe, vous êtes là pour sécuriser et établir un confinement initial pour transporter un SCP lors d’activité anormale)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Clara Meunier</h4>
+        <p>Grade: Unité de désinfection (3) - Spécialité</p>
+        <p class="specialty">(Accessible à partir de soldat de 1ère classe, vous êtes là pour désinfecter des zones, protéger le site avec votre lance-flamme et votre MG42 et protéger des SCP)</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Hugo Faure</h4>
+        <p>Grade: Spécialité en sécurité</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Vincent Larose</h4>
+        <p>Grade: Spécialité en sécurité</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Alice Royer</h4>
+        <p>Grade: Spécialité en sécurité</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Patrick Descamps</h4>
+        <p>Grade: Spécialité en sécurité</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Jacques Durand</h4>
+        <p>Grade: Spécialité en sécurité</p>
+    </div>
+    <div class="personnel-item">
+        <h4>Agent : Marianne Truchon</h4>
+        <p>Grade: Spécialité en sécurité</p>
+    </div>
+</div>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Département Scientifique - Grades</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header img {
+            width: 50px;
+            height: 50px;
+        }
+
+        .results {
+            padding: 20px;
+            text-align: left;
+            width: 80%;
+            margin: auto;
+        }
+
+        .department-section {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 5px;
+        }
+
+        .department-section h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .person-item {
+            background-color: #444;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .person-item h4 {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .person-item p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="https://media1.tenor.com/m/Lll07smMS_wAAAAC/scp-sl.gif" alt="Logo SCP">
+    <h1>Base de Données SCP - Département Scientifique</h1>
+</header>
+
+<div class="department-section">
+    <h2>Département Scientifique - Personnel et Grades</h2>
+
+    <div class="person-item">
+        <h4>Jean Dupont</h4>
+        <p>Grade : Assistant Chercheur (Accréditation: 1-2)</p>
+        <p>Description : Vous êtes une véritable merde et assistez votre supérieur lors de ses expériences, vous partagez également le même laboratoire. Vous ne pouvez expérimenter aucun SCP seul.</p>
+    </div>
+    <div class="person-item">
+        <h4>Marie Leblanc</h4>
+        <p>Grade : Chercheur (Accréditation: 2)</p>
+        <p>Description : Vous êtes suffisamment expérimentée pour travailler seul et sous les ordres du Superviseur de votre branche. Vous pouvez expérimenter sur les Safes et les Euclides les plus inoffensifs, accompagné de M.T.F.</p>
+    </div>
+    <div class="person-item">
+        <h4>Luc Martin</h4>
+        <p>Grade : Chercheur expérimenté (Accréditation: 3)</p>
+        <p>Description : Vous êtes l'un des meilleurs, vous pouvez maintenant expérimenter sur Safe, Euclide, et également les Keter sous autorisation.</p>
+    </div>
+    <div class="person-item">
+        <h4>Clara Petit</h4>
+        <p>Grade : Superviseur Adjoint (Accréditation: 3)</p>
+        <p>Description : Vous assistez le ou la Superviseur si jamais il devait s'absenter pour quelque raison.</p>
+    </div>
+    <div class="person-item">
+        <h4>Albert Duval</h4>
+        <p>Grade : Superviseur (Accréditation: 4)</p>
+        <p>Description : Vous êtes maintenant en haut de votre branche, le stade de Superviseur. Vous décidez quelle expérience aura lieu et qui pourra monter en grade.</p>
+    </div>
+<div class="person-item">
+    <h4>Jean Dupont</h4>
+    <p>Grade : Assistant Chercheur (Accréditation: 1-2)</p>
+    <p>Description : Vous êtes une véritable merde et assistez votre supérieur lors de ses expériences, vous partagez également le même laboratoire. Vous ne pouvez expérimenter aucun SCP seul.</p>
+</div>
+<div class="person-item">
+    <h4>Marie Leblanc</h4>
+    <p>Grade : Chercheur (Accréditation: 2)</p>
+    <p>Description : Vous êtes suffisamment expérimentée pour travailler seul et sous les ordres du Superviseur de votre branche. Vous pouvez expérimenter sur les Safes et les Euclides les plus inoffensifs, accompagné de M.T.F.</p>
+</div>
+<div class="person-item">
+    <h4>Luc Martin</h4>
+    <p>Grade : Chercheur expérimenté (Accréditation: 3)</p>
+    <p>Description : Vous êtes l'un des meilleurs, vous pouvez maintenant expérimenter sur Safe, Euclide, et également les Keter sous autorisation.</p>
+</div>
+<div class="person-item">
+    <h4>Clara Petit</h4>
+    <p>Grade : Superviseur Adjoint (Accréditation: 3)</p>
+    <p>Description : Vous assistez le ou la Superviseur si jamais il devait s'absenter pour quelque raison.</p>
+</div>
+<div class="person-item">
+    <h4>Albert Duval</h4>
+    <p>Grade : Superviseur (Accréditation: 4)</p>
+    <p>Description : Vous êtes maintenant en haut de votre branche, le stade de Superviseur. Vous décidez quelle expérience aura lieu et qui pourra monter en grade.</p>
+</div>
+
+<!-- Liste supplémentaire avec d'autres noms -->
+<div class="person-item">
+    <h4>Élodie Rochard</h4>
+    <p>Grade : Assistant Chercheur (Accréditation: 1-2)</p>
+    <p>Description : Vous assistez les chercheurs principaux et aidez à la gestion des données des expériences. Vous avez une formation de base pour aider aux recherches sur les SCPs.</p>
+</div>
+
+<div class="person-item">
+    <h4>Pierre Marchand</h4>
+    <p>Grade : Chercheur (Accréditation: 2)</p>
+    <p>Description : Vous avez déjà de l'expérience dans le domaine, vous pouvez travailler de manière autonome et réaliser des recherches sur des SCPs classifiés comme Safe et Euclide.</p>
+</div>
+
+<div class="person-item">
+    <h4>Antoine Lefevre</h4>
+    <p>Grade : Chercheur expérimenté (Accréditation: 3)</p>
+    <p>Description : Vous avez prouvé vos compétences sur des SCPs plus risqués et travaillez sur des projets sensibles, avec des autorisations spéciales pour manipuler des SCPs Keter.</p>
+</div>
+
+<div class="person-item">
+    <h4>Isabelle Dubois</h4>
+    <p>Grade : Superviseur Adjoint (Accréditation: 3)</p>
+    <p>Description : secret 
+
+
+    <!-- Ajouter d'autres membres du personnel avec leurs grades ici -->
+    
+</div>
+
+</body>
+</html>
+<div class="department-section">
+    <h2>Département de la Maintenance</h2>
+    
+    <div class="person-item">
+        <h4>Michel Bernard</h4>
+        <p>Grade : Technicien de maintenance (Accréditation: 1)</p>
+        <p>Description : Responsable de la maintenance de base des installations et des équipements standard sur site. Répare et entretient les matériels courants.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Caroline Lefevre</h4>
+        <p>Grade : Technicien supérieur (Accréditation: 2)</p>
+        <p>Description : Assure la maintenance des équipements plus complexes, comme les systèmes de confinement et de sécurité sur les sites SCP.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>David Moreau</h4>
+        <p>Grade : Ingénieur de maintenance (Accréditation: 3)</p>
+        <p>Description : En charge de la gestion des réparations complexes et de la mise à jour des technologies utilisées dans les installations de confinement des SCP.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Elodie Dupuis</h4>
+        <p>Grade : Chef de maintenance (Accréditation: 4)</p>
+        <p>Description : Supervise toutes les opérations de maintenance dans les installations SCP. Coordonne les réparations urgentes et la gestion des équipes.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Julien Grange</h4>
+        <p>Grade : Responsable de la maintenance spécialisée (Accréditation: 5)</p>
+        <p>Description : Responsable de la maintenance des équipements spécifiques, en particulier ceux utilisés pour les SCP de haute sécurité, tels que les dispositifs de confinement.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Amandine Roux</h4>
+        <p>Grade : Technicien de maintenance (Accréditation: 1)</p>
+        <p>Description : Effectue les réparations de routine sur les équipements et les installations générales, en veillant à ce que tout fonctionne correctement.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Lucas Fontaine</h4>
+        <p>Grade : Technicien supérieur (Accréditation: 2)</p>
+        <p>Description : Supervise l'entretien des équipements techniques avancés, y compris les systèmes informatiques et de surveillance des sites SCP.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Sophie Lefevre</h4>
+        <p>Grade : Ingénieur de maintenance (Accréditation: 3)</p>
+        <p>Description : Spécialisée dans la maintenance des systèmes complexes et la mise en place de nouveaux équipements pour améliorer les infrastructures de la Fondation.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Gérard Gauthier</h4>
+        <p>Grade : Chef de maintenance (Accréditation: 4)</p>
+        <p>Description : Assure la gestion globale de la maintenance des sites SCP. Dirige les équipes de maintenance et supervise les réparations critiques.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Marc Dufresne</h4>
+        <p>Grade : Responsable de la maintenance spécialisée (Accréditation: 5)</p>
+        <p>Description : Expert en maintenance des équipements de confinement des SCP. Surveille et entretient les dispositifs sensibles de sécurité.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Claire Martin</h4>
+        <p>Grade : Technicien de maintenance (Accréditation: 1)</p>
+        <p>Description : Effectue des réparations simples et assure le bon fonctionnement des installations dans les secteurs non sensibles des sites SCP.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Thomas Lambert</h4>
+        <p>Grade : Technicien supérieur (Accréditation: 2)</p>
+        <p>Description : Maintenance des équipements avancés et réparation des systèmes de contrôle utilisés pour les SCP de classe Euclide et Safe.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Lucie Deschamps</h4>
+        <p>Grade : Ingénieur de maintenance (Accréditation: 3)</p>
+        <p>Description : En charge de l'optimisation et de la mise à jour des systèmes techniques de haute sécurité pour les sites contenant des SCP.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Jérémy Lefevre</h4>
+        <p>Grade : Chef de maintenance (Accréditation: 4)</p>
+        <p>Description : Supervise les interventions de maintenance d'urgence, coordonne les équipes et assure la gestion des travaux complexes dans les installations sensibles.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Emilie Roux</h4>
+        <p>Grade : Responsable de la maintenance spécialisée (Accréditation: 5)</p>
+        <p>Description : Responsable des équipements sophistiqués et des technologies de confinement pour les SCP à haut risque. Expert dans la maintenance des systèmes critiques.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Romain Vidal</h4>
+        <p>Grade : Technicien de maintenance (Accréditation: 1)</p>
+        <p>Description : Effectue les tâches de maintenance de base, notamment la réparation des équipements simples et des systèmes non sensibles.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Véronique Bellanger</h4>
+        <p>Grade : Technicien supérieur (Accréditation: 2)</p>
+        <p>Description : En charge de l'entretien et de la réparation des équipements plus complexes, y compris ceux liés à la sécurité et aux protocoles de confinement.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>François Durand</h4>
+        <p>Grade : Ingénieur de maintenance (Accréditation: 3)</p>
+        <p>Description : Assure le suivi des réparations techniques et de l'entretien des systèmes à grande échelle. Participe à la mise à jour des équipements sensibles.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Alison Dupont</h4>
+        <p>Grade : Chef de maintenance (Accréditation: 4)</p>
+        <p>Description : Responsable des réparations d'urgence sur les installations sensibles. Coordonne les équipes de maintenance pour assurer le bon fonctionnement des dispositifs de confinement.</p>
+    </div>
+</div>
+<div class="department-section">
+    <h2>Département Administratif</h2>
+    
+    <!-- Personnes du département administratif -->
+    <div class="person-item">
+        <h4>John Carter</h4>
+        <p>Grade : Assistant administratif (Accréditation: 1)</p>
+        <p>Description : Responsable de la gestion quotidienne des documents, de la prise en charge des tâches administratives simples et du classement des rapports.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Ana Petrova</h4>
+        <p>Grade : Secrétaire exécutive (Accréditation: 2)</p>
+        <p>Description : En charge de la planification des réunions, de la gestion des communications internes et externes, ainsi que de la rédaction de rapports.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Francesco Rossi</h4>
+        <p>Grade : Coordinateur administratif (Accréditation: 3)</p>
+        <p>Description : Supervise les tâches administratives au sein du département. Coordonne les différents services de la Fondation pour garantir l'efficacité des opérations administratives.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Olga Vasilieva</h4>
+        <p>Grade : Responsable des ressources humaines (Accréditation: 3)</p>
+        <p>Description : En charge de la gestion des employés de la Fondation SCP, de leur recrutement et de leur formation continue.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>David Smith</h4>
+        <p>Grade : Chef du département administratif (Accréditation: 4)</p>
+        <p>Description : Dirige l'ensemble des activités administratives de la Fondation, supervise les projets de gestion interne et garantit la conformité aux procédures.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Irina Kuznetsova</h4>
+        <p>Grade : Spécialiste des opérations internes (Accréditation: 3)</p>
+        <p>Description : Gère les opérations administratives internes, coordonne la gestion des stocks et des ressources pour garantir l'efficacité du travail administratif.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Thomas Mueller</h4>
+        <p>Grade : Analyste administratif (Accréditation: 2)</p>
+        <p>Description : Analyse et traite les rapports administratifs, assure la gestion des documents financiers et des données internes de la Fondation.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Yulia Ivanova</h4>
+        <p>Grade : Responsable de la gestion des archives (Accréditation: 2)</p>
+        <p>Description : Organise, gère et sécurise les archives de la Fondation SCP, en veillant à la confidentialité des documents sensibles.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Michael Davis</h4>
+        <p>Grade : Assistant administratif (Accréditation: 1)</p>
+        <p>Description : Soutient les membres du département administratif en accomplissant des tâches de soutien, comme la gestion des agendas et des communications internes.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Emilia Schneider</h4>
+        <p>Grade : Secrétaire exécutive (Accréditation: 2)</p>
+        <p>Description : Responsable de l'organisation des réunions, de la gestion des horaires des supérieurs et de la gestion des correspondances.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Igor Morozov</h4>
+        <p>Grade : Coordinateur administratif (Accréditation: 3)</p>
+        <p>Description : Supervise l'optimisation des procédures administratives et coordonne les efforts de gestion des projets en interne.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Elena Petrova</h4>
+        <p>Grade : Responsable des ressources humaines (Accréditation: 3)</p>
+        <p>Description : Gestion des relations humaines au sein de la Fondation, notamment la gestion des conflits internes et des embauches.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Johnathan Taylor</h4>
+        <p>Grade : Chef des opérations administratives (Accréditation: 4)</p>
+        <p>Description : Supervise la gestion de l'ensemble des processus administratifs au sein de la Fondation, en s'assurant de leur efficacité et de leur conformité.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Anna Kowalski</h4>
+        <p>Grade : Spécialiste des opérations internes (Accréditation: 3)</p>
+        <p>Description : Responsable de la gestion des tâches administratives complexes, de la coordination entre différents départements et de la mise en œuvre des stratégies administratives.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Vladimir Petrov</h4>
+        <p>Grade : Analyste administratif (Accréditation: 2)</p>
+        <p>Description : Responsable de l'analyse des données administratives et financières, avec pour mission d'optimiser les coûts et les ressources de la Fondation.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Maria Garcia</h4>
+        <p>Grade : Responsable des archives et de la documentation (Accréditation: 2)</p>
+        <p>Description : Gère les documents internes et assure leur conservation à long terme tout en respectant les protocoles de sécurité de la Fondation.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Daniel Meyer</h4>
+        <p>Grade : Directeur administratif (Accréditation: 4)</p>
+        <p>Description : Dirige le département administratif en établissant les priorités et les objectifs, et en assurant le bon fonctionnement des activités internes.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Yvonne Müller</h4>
+        <p>Grade : Analyste financier (Accréditation: 3)</p>
+        <p>Description : Responsable de la gestion des budgets, du suivi des dépenses et de l'analyse des investissements pour soutenir les opérations de la Fondation.</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Gregory Johnson</h4>
+        <p>Grade : Assistant administratif (Accréditation: 1)</p>
+        <p>Description : Responsable des tâches administratives de base, telles que la gestion du courrier, la prise en charge des appels et la planification des réunions.</p>
+    </div>
+
+</div>
+<div class="command-section">
+    <h2>Membres du Conseil d'Administration</h2>
+    
+    <!-- Membres du Conseil d'Administration -->
+    <div class="person-item">
+        <h4>Dr. James Holloway</h4>
+        <p>Grade : Membre du Conseil d'Administration (Accréditation: 4)</p>
+        <p>Description : Responsable de la gestion des projets sensibles. Information confidentielle. [CENSURÉ]</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Irina Volkov</h4>
+        <p>Grade : Membre du Conseil d'Administration (Accréditation: 4)</p>
+        <p>Description : Superviseur des activités de recherche avancée. [CENSURÉ]. Détails sur son rôle restent classifiés sous N°[CENSURÉ].</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Richard Winters</h4>
+        <p>Grade : Membre du Conseil d'Administration (Accréditation: 4)</p>
+        <p>Description : En charge de la coordination avec des organisations gouvernementales. Rôle dans l'administration des ressources stratégiques [CENSURÉ].</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Sergei Mikhailov</h4>
+        <p>Grade : Membre du Conseil d'Administration (Accréditation: 4)</p>
+        <p>Description : Expert en gestion des crises et des menaces à grande échelle. Information concernant ses précédentes affectations [CENSURÉ].</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Claire Moreau</h4>
+        <p>Grade : Membre du Conseil d'Administration (Accréditation: 4)</p>
+        <p>Description : Responsable des projets de confinement et des stratégies d'évacuation. Détails de ses recherches [CENSURÉ].</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Dr. Viktor Alekseev</h4>
+        <p>Grade : Membre du Conseil d'Administration (Accréditation: 4)</p>
+        <p>Description : Scientifique principal des anomalies biologiques et des SCP liés à la biologie. Son implication dans des projets top secrets [CENSURÉ].</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Emily Tran</h4>
+        <p>Grade : Membre du Conseil d'Administration (Accréditation: 4)</p>
+        <p>Description : Coordonne les protocoles de communication entre les départements. Informations relatives à ses missions de terrain [CENSURÉ].</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Leonid Karpov</h4>
+        <p>Grade : Membre du Conseil d'Administration (Accréditation: 4)</p>
+        <p>Description : Expert en technologies avancées et dans la mise en place de mesures de sécurité électronique. Historique de ses recherches [CENSURÉ].</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Rebecca Knight</h4>
+        <p>Grade : Membre du Conseil d'Administration (Accréditation: 4)</p>
+        <p>Description : Responsable de la logistique et de l'acheminement des ressources nécessaires aux opérations. Renseignements [CENSURÉ].</p>
+    </div>
+
+    <div class="person-item">
+        <h4>Edward Gallagher</h4>
+        <p>Grade : Membre du Conseil d'Administration (Accréditation: 4)</p>
+        <p>Description : Spécialiste des relations internationales et de la gestion des crises diplomatiques impliquant la Fondation. [CENSURÉ].</p>
+    </div>
+</div>
+
